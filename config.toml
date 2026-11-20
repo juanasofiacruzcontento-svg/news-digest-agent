@@ -1,0 +1,9 @@
+# Modifica qui gli argomenti del tuo notiziario
+topics = [
+  "intelligenza artificiale",
+  "tecnologia",
+  "economia italiana",
+]
+
+language = "italiano"
+news_per_topic = 4
