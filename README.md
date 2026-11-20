@@ -39,7 +39,6 @@ Esempio di cosa fa l'agente (`-v`):
 
 ## Caratteristiche tecniche
 
-- **Ciclo dell'agente scritto da zero** (`agent/core.py`): nessun framework, logica chiara e leggibile
 - **Function calling**: il modello sceglie fra 3 strumenti (cerca notizie, leggi feed RSS, leggi articolo)
 - **Più provider AI con cambio automatico**: Groq → Gemini → OpenRouter se uno non risponde
 - **Esecuzione programmata** con GitHub Actions e archivio automatico dei notiziari
