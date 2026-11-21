@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from agent import Agent, LLM  # noqa: E402
-from agent.delivery import save_markdown, send_email, send_telegram  # noqa: E402
+from agent.delivery import send_email, send_telegram  # noqa: E402
+from agent.selection import Selector  # noqa: E402
 
 
 def main():
@@ -22,13 +23,27 @@ def main():
         cfg = tomllib.load(f)
     topics = [t.strip() for t in args.topics.split(",")] if args.topics else cfg["topics"]
 
+    per_topic = cfg.get("news_per_topic", 4)
     print(f"🗞️  Preparo il notiziario su: {', '.join(topics)}")
-    agent = Agent(LLM(verbose=args.verbose), verbose=args.verbose)
-    digest = agent.run(topics, language=cfg.get("language", "italiano"),
-                       per_topic=cfg.get("news_per_topic", 4))
+    llm = LLM(verbose=args.verbose)
 
-    path = save_markdown(digest)
-    print(f"💾 Salvato in {path}\n")
+    briefing = None
+    sel = cfg.get("selezione", {})
+    if sel.get("attiva", True):
+        try:
+            chosen = Selector(llm, queries_per_topic=sel.get("ricerche_per_argomento", 3),
+                              per_query=sel.get("notizie_per_ricerca", 15),
+                              verbose=args.verbose).run(topics, per_topic)
+            if any(chosen.values()):
+                briefing = Selector.briefing(chosen)
+        except Exception as e:  # se la selezione fallisce l'agente cerca da solo, come prima
+            print(f"⚠️  Selezione non riuscita ({e}): l'agente cerca da solo")
+
+    agent = Agent(llm, verbose=args.verbose)
+    digest = agent.run(topics, language=cfg.get("language", "italiano"), per_topic=per_topic,
+                       briefing=briefing)
+
+    print()
     print(digest)
 
     if args.dry_run:

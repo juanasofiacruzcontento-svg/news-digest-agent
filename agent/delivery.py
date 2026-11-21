@@ -1,4 +1,4 @@
-"""Invio del notiziario: Telegram, email e salvataggio su file."""
+"""Invio del notiziario: Telegram ed email."""
 from __future__ import annotations
 
 import html
@@ -7,7 +7,6 @@ import re
 import smtplib
 from datetime import date
 from email.mime.text import MIMEText
-from pathlib import Path
 
 import requests
 
@@ -73,10 +72,3 @@ def send_email(text: str) -> bool:
         s.login(user, password)
         s.send_message(msg)
     return True
-
-
-def save_markdown(text: str, folder: str = "digests") -> Path:
-    path = Path(folder) / f"{date.today():%Y-%m-%d}.md"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
-    return path

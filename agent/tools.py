@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import datetime, timezone
 from urllib.parse import quote_plus
 
 import feedparser
@@ -35,9 +36,8 @@ def _clean(html: str) -> str:
     return re.sub(r"\s+", " ", BeautifulSoup(html or "", "html.parser").get_text()).strip()
 
 
-def search_news(query: str, lang: str = "it", country: str = "IT", limit: int = 6) -> list[dict]:
-    """Cerca notizie recenti (ultime 24 ore) su Google News."""
-    limit = max(1, min(int(limit), 8))
+def fetch_news(query: str, limit: int = 15, lang: str = "it", country: str = "IT") -> list[dict]:
+    """Notizie delle ultime 24 ore da Google News, con data di pubblicazione."""
     url = (f"https://news.google.com/rss/search?q={quote_plus(query + ' when:1d')}"
            f"&hl={lang}&gl={country}&ceid={country}:{lang}")
     feed = feedparser.parse(url, request_headers=HEADERS)
@@ -47,8 +47,16 @@ def search_news(query: str, lang: str = "it", country: str = "IT", limit: int = 
         title = e.get("title", "")
         if source and title.endswith(" - " + source):  # Google aggiunge la fonte al titolo
             title = title[: -len(source) - 3]
-        results.append({"id": _short(e.get("link", "")), "title": title[:160], "source": source})
+        published = e.get("published_parsed")
+        results.append({"id": _short(e.get("link", "")), "title": title[:160], "source": source,
+                        "published": datetime(*published[:6], tzinfo=timezone.utc) if published else None})
     return results
+
+
+def search_news(query: str, lang: str = "it", country: str = "IT", limit: int = 6) -> list[dict]:
+    """Cerca notizie recenti (ultime 24 ore) su Google News."""
+    limit = max(1, min(int(limit), 8))
+    return [{k: r[k] for k in ("id", "title", "source")} for r in fetch_news(query, limit, lang, country)]
 
 
 def read_feed(url: str, limit: int = 6) -> list[dict]:

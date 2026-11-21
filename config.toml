@@ -7,3 +7,9 @@ topics = [
 
 language = "italiano"
 news_per_topic = 4
+
+# Selezione delle notizie: tante ricerche, raggruppamento dei doppioni e voti dell'AI
+[selezione]
+attiva = true                 # false = l'agente cerca e sceglie da solo, come all'inizio
+ricerche_per_argomento = 3    # ricerche diverse su Google News per ogni argomento
+notizie_per_ricerca = 15      # candidate raccolte da ogni ricerca

@@ -47,7 +47,7 @@ class LLM:
                 + ", ".join(p.env_key for p in PROVIDERS)
             )
 
-    def chat(self, messages: list[dict], tools: list[dict] | None = None):
+    def chat(self, messages: list[dict], tools: list[dict] | None = None, max_tokens: int = 2000):
         last_error = None
         for provider, client in self.clients:
             for attempt in range(4):
@@ -57,7 +57,7 @@ class LLM:
                         messages=messages,
                         tools=tools or None,
                         temperature=0.2,
-                        max_tokens=2000,
+                        max_tokens=max_tokens,
                     )
                     if self.verbose:
                         print(f"  [llm] risposta da {provider.name}")

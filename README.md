@@ -6,42 +6,57 @@
 
 Un **agente AI** che ogni mattina legge le notizie sugli argomenti che scegli, seleziona le più importanti, scrive un riassunto e te lo manda su **Telegram** o via **email**.
 
-Gira da solo su GitHub Actions, gratis, senza server. 📂 [Guarda i notiziari già pubblicati](digests/)
+Gira da solo su GitHub Actions, gratis, senza server.
 
 ## Come funziona
 
-L'agente non segue una sequenza fissa: **decide da solo** cosa cercare, quali articoli aprire e quando ha abbastanza informazioni.
+Il lavoro è diviso come in una redazione: prima si **scelgono** le notizie, poi l'agente le **scrive**.
 
 ```mermaid
 flowchart LR
-    A[⏰ Ogni mattina<br>GitHub Actions] --> B[🤖 Agente AI]
-    B -->|cerca| C[Google News]
-    B -->|legge| D[Articoli]
-    C & D -->|risultati| B
-    B --> E[📝 Riassunto]
-    E --> F[📱 Telegram]
-    E --> G[📧 Email]
-    E --> H[📂 Archivio nel repo]
+    A[⏰ Ogni mattina<br>GitHub Actions] --> B[🔎 Più ricerche<br>per argomento]
+    B --> C[🧩 Raggruppa<br>i doppioni]
+    C --> D[🗳️ Voti AI<br>+ bonus]
+    D --> E[🤖 Agente<br>scrive]
+    E -->|legge| F[Articoli]
+    E --> G[📱 Telegram]
+    E --> H[📧 Email]
 ```
 
-Esempio di cosa fa l'agente (`-v`):
+### Come vengono scelte le notizie
+
+1. **Tante candidate**: per ogni argomento l'AI propone 3 ricerche diverse (es. *intelligenza artificiale*, *AI regolamentazione*, *AI etica lavoro*) e si raccolgono ~45 notizie da Google News.
+2. **Niente doppioni**: i titoli che raccontano lo stesso fatto vengono uniti. Se ne parlano più giornali, la notizia è probabilmente importante.
+3. **Voti**: l'AI fa da caporedattore e dà a ogni notizia un voto da 0 a 10 su
+   - **importanza** (impatto concreto per un lettore italiano),
+   - **novità** (fatto nuovo di oggi, non commenti, eventi promozionali o pubblicità),
+   - **pertinenza** (le notizie fuori tema vengono scartate).
+4. **Classifica**: `punteggio = 0,5·importanza + 0,2·novità + 0,3·pertinenza`, più **+0,5 per ogni altro giornale** che ne parla (max +2) e **+0,5 se è uscita nelle ultime 6 ore**. Una notizia già usata in un argomento non viene ripetuta in un altro.
+
+Se la selezione non riesce, l'agente torna a cercare e scegliere da solo. Si regola in `config.toml`, nella sezione `[selezione]`.
+
+Esempio di cosa fa (`-v`):
 
 ```
-🗞️  Preparo il notiziario su: intelligenza artificiale, Serie A
-  🔧 search_news({"query": "intelligenza artificiale"})
-  🔧 search_news({"query": "AI nuovi modelli"})
-  🔧 read_article({"url": "https://..."})
-  🔧 search_news({"query": "Serie A risultati"})
-  [llm] risposta da groq
-💾 Salvato in digests/2026-11-20.md
+📚 intelligenza artificiale
+  🔎 intelligenza artificiale
+  🔎 AI regolamentazione
+  🔎 AI etica lavoro
+  🗳️  votate 25/25
+  ✅  9.80  [1 fonti] «Ho risolto con l'intelligenza artificiale il Sacro Graal della matematica»...
+  ✅  8.40  [1 fonti] Intelligenza artificiale, lavoro e partecipazione: Assolombarda e Sindacati...
+  ✅  8.20  [1 fonti] Intelligenza artificiale: la relazione della Cassazione
+      7.30  [2 fonti] Fari sull'intelligenza artificiale: "Nessuna paura per le imprese..."
+  🔧 read_article({"id": "L5"})
 📬 Inviato via Telegram
 ```
 
 ## Caratteristiche tecniche
 
+- **Selezione a punteggio**: raggruppamento dei titoli simili, voti dell'AI in JSON (letti anche se la risposta arriva troncata), bonus per copertura e freschezza
 - **Function calling**: il modello sceglie fra 3 strumenti (cerca notizie, leggi feed RSS, leggi articolo)
 - **Più provider AI con cambio automatico**: Groq → Gemini → OpenRouter se uno non risponde
-- **Esecuzione programmata** con GitHub Actions e archivio automatico dei notiziari
+- **Esecuzione programmata** con GitHub Actions
 - **Test senza connessione** con un'AI finta + CI
 
 ## Avvio rapido
@@ -84,7 +99,6 @@ pytest -q
 ## Idee per il futuro
 
 - [ ] Comandi Telegram per cambiare argomenti (`/aggiungi calcio`)
-- [ ] Pagina web con l'archivio dei notiziari (GitHub Pages)
 - [ ] Versione audio del notiziario
 
 ## Licenza
