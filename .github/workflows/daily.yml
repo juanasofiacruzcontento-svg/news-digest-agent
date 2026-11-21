@@ -2,7 +2,7 @@ name: Notiziario quotidiano
 
 on:
   schedule:
-    - cron: "0 6 * * *"   # ogni giorno alle 6:00 UTC = 7:00 in Italia (8:00 con l'ora legale)
+    - cron: "23 5 * * *"  # ogni giorno alle 5:23 UTC = 6:23 in Italia (7:23 con l'ora legale); minuto non tondo per evitare ritardi di GitHub
   workflow_dispatch:       # permette di avviarlo a mano dal tab "Actions"
 
 permissions:
